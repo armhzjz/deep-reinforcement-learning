@@ -5,15 +5,14 @@
     // Due to devcontainer not yet supporting the '--network host' argument when building from a Dockerfile
     // See: https://github.com/microsoft/vscode-remote-release/issues/3545
     // Workaround: build the image on the host before asking vscode to build it so that it is re-used
-    "initializeCommand":
-        "DOCKER_BUILDKIT=1 docker build --network host --build-arg CONDA_VERSION=2021.11 --build-arg USER=pythonist --tag pythondevel:1.0 .devcontainer/",
+    "initializeCommand": "docker build --network host --build-arg MAMABAFORGE_VERSION=4.11.0-4 --build-arg USER=pythonist --tag deepdevel:1.0 .devcontainer/",
 
     "build": {
         "dockerfile": "Dockerfile",
         "context": ".",
         "args": {
             "USER": "pythonist",
-            "CONDA_VERSION": "2021.11"
+            "MAMABAFORGE_VERSION": "4.11.0-4"
         }
     },
 
@@ -21,7 +20,7 @@
     "runArgs": [ "--network=host" ],
 
     // Forward ports (to be able to open jupyter notebooks in the local browser)
-    "forwardPorts": ["8888:8888"],
+    "forwardPorts": [ "8888:8888" ],
 
     // Environment variables to set in the container
     "containerEnv": {},

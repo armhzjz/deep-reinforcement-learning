@@ -1,13 +1,13 @@
 # syntax=docker/dockerfile:1.2
-ARG     CONDA_VERSION
-FROM    continuumio/anaconda3:${CONDA_VERSION}
+ARG     MAMABAFORGE_VERSION
+FROM    condaforge/mambaforge:${MAMABAFORGE_VERSION}
 
 # Create a non-root user
 ARG     USER
 ARG     USERNAME=${USER}
 ARG     GROUPNAME=${USERNAME}
-ARG     USER_UID=1000
-ARG     USER_GID=1000
+ARG     USER_UID=1010
+ARG     USER_GID=1010
 RUN     set -x && \
         groupadd \
                 --gid ${USER_GID} \
@@ -58,20 +58,9 @@ RUN     set -x && \
 RUN     git clone --depth 1 https://github.com/junegunn/fzf.git ~/.fzf
 RUN     cd ~/.fzf && ./install
 
-# Install exercism
-#  First change to bash shell to be albot to echo multiline content
-#  into a file
-SHELL ["/bin/bash", "-c"]
-RUN     set -x && \
-        wget \
-                https://github.com/exercism/cli/releases/download/v3.0.13/exercism-3.0.13-linux-x86_64.tar.gz \
-                -O ~/exercism-3.0.13-linux-x86_64.tar.gz && \
-        mkdir -p ~/bin && \
-        mv ~/exercism-3.0.13-linux-x86_64.tar.gz ~/bin/ && \
-        tar xf ~/bin/exercism-3.0.13-linux-x86_64.tar.gz -C ~/bin/ && \
-        echo $'\n\
-        if [ -f ~/.config/exercism/exercism_completion.bash ]; then \n\
-                source ~/.config/exercism/exercism_completion.bash \n\
-        fi' >> ~/.bashrc && \
-        echo 'export PATH=~/bin:$PATH' >> ~/.bashrc && \
-        :
+# install jupyterlab
+COPY --chown=${USERNAME}:${GROUPNAME} environment-linux-64.lock .
+# In case it hasn't been created yet, create the lock file with the following command:
+#       'conda lock -p linux-64 -k explicit -f conda_environment.yml --filename-template 'environment-{platform}.lock'
+RUN --mount=type=cache,target=/opt/conda/pkgs mamba create --name deepReinforcement --file environment-linux-64.lock && \
+        conda clean -afy
