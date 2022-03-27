@@ -7,3 +7,4 @@ dependencies:
   - gym
   - jupyter
   - jupyterlab
+  - matplotlib-base
