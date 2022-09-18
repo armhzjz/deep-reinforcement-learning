@@ -29,6 +29,10 @@
     "mounts": [
         "source=${localEnv:HOME}/.gitconfig,target=/home/pythonist/.gitconfig,type=bind",
         "source=${localEnv:HOME}/.ssh/,target=/home/pythonist/.ssh/,type=bind",
+        "source=${localEnv:HOME}/.wakatime.cfg,target=/home/pythonist/.wakatime.cfg,type=bind",
+        "source=${localEnv:HOME}/.wakatime.bdb,target=/home/pythonist/.wakatime.bdb,type=bind",
+        "source=${localEnv:HOME}/.wakatime.log,target=/home/pythonist/.wakatime.log,type=bind",
+        "source=${localEnv:HOME}/.wakatime/,target=/home/pythonist/.wakatime/,type=bind",
     ],
 
     // Set *default* container specific settings.json values on container create.
@@ -54,5 +58,6 @@
         "eamodio.gitlens",
         "oderwat.indent-rainbow",
         "shardulm94.trailing-spaces",
+        "wakatime.vscode-wakatime"
     ],
 }
