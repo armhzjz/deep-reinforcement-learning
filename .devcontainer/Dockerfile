@@ -61,6 +61,6 @@ RUN     cd ~/.fzf && ./install
 # install jupyterlab
 COPY --chown=${USERNAME}:${GROUPNAME} environment-linux-64.lock .
 # In case it hasn't been created yet, create the lock file with the following command:
-#       'conda lock -p linux-64 -k explicit -f conda_environment.yml --filename-template 'environment-{platform}.lock'
+#       conda lock -p linux-64 -k explicit -f conda_environment.yml --filename-template 'environment-{platform}.lock'
 RUN --mount=type=cache,target=/opt/conda/pkgs mamba create --name deepReinforcement --file environment-linux-64.lock && \
         conda clean -afy
