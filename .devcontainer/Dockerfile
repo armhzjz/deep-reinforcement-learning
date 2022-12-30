@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1.2
-ARG     MAMABAFORGE_VERSION
-FROM    condaforge/mambaforge:${MAMABAFORGE_VERSION}
+ARG     MAMBAFORGE_VERSION=4.11.0-4
+FROM    condaforge/mambaforge:${MAMBAFORGE_VERSION}
 
 # Create a non-root user
 ARG     USER

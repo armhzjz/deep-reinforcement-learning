@@ -5,7 +5,7 @@
     // Due to devcontainer not yet supporting the '--network host' argument when building from a Dockerfile
     // See: https://github.com/microsoft/vscode-remote-release/issues/3545
     // Workaround: build the image on the host before asking vscode to build it so that it is re-used
-    "initializeCommand": "docker build --network host --build-arg MAMABAFORGE_VERSION=4.11.0-4 --build-arg USER=pythonist --tag deepdevel:1.0 .devcontainer/",
+    "initializeCommand": "docker build --network host --build-arg MAMBAFORGE_VERSION=4.11.0-4 --build-arg USER=pythonist --tag deepdevel:1.0 .devcontainer/",
 
     "build": {
         "dockerfile": "Dockerfile",
