@@ -3,7 +3,7 @@ import sys
 import math
 import numpy as np
 
-def interact(env, agent, num_episodes=20000, window=100):
+def interact(env, agent, num_episodes=20000, window=100, print_logs=True):
     """ Monitor agent's performance.
 
     Params
@@ -31,7 +31,6 @@ def interact(env, agent, num_episodes=20000, window=100):
         state = env.reset()
         # initialize the sampled reward
         samp_reward = 0
-        agent.epsilon = agent.initial_epsilon / (i_episode)
         while True:
             # agent selects an action
             action = agent.select_action(state)
@@ -56,12 +55,13 @@ def interact(env, agent, num_episodes=20000, window=100):
             if avg_reward > best_avg_reward:
                 best_avg_reward = avg_reward
                 best_avg_reward_episode = i_episode
-        # monitor progress
-        print("\rEpisode {}/{} || Best average reward {} at episode {} ".format(i_episode, num_episodes, best_avg_reward, best_avg_reward_episode), end="")
-        sys.stdout.flush()
-        # check if task is solved (according to OpenAI Gym)
-        if best_avg_reward >= 9.7:
-            print('\nEnvironment solved in {} episodes.'.format(i_episode), end="")
-            break
+        if print_logs:
+            # monitor progress
+            print("\rEpisode {}/{} || Best average reward {} at episode {} ".format(i_episode, num_episodes, best_avg_reward, best_avg_reward_episode), end="")
+            sys.stdout.flush()
+            # check if task is solved (according to OpenAI Gym)
+            if best_avg_reward >= 9.7:
+                print('\nEnvironment solved in {} episodes.'.format(i_episode), end="")
+                break
         if i_episode == num_episodes: print('\n')
     return avg_rewards, best_avg_reward
