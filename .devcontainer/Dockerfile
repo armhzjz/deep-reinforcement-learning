@@ -43,6 +43,7 @@ RUN     set -x && \
                 git \
                 wget \
                 tar \
+                python-opengl \
                 && \
         sudo --preserve-env apt clean && \
         sudo rm -fr /var/lib/apt/lists/* && \
