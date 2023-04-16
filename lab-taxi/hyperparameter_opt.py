@@ -8,6 +8,9 @@ from hyperopt import hp, fmin, tpe, space_eval
 
 import gym
 import numpy as np
+import warnings
+
+warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 def objective_f(args) -> float:
     env = gym.make('Taxi-v3')

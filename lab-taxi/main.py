@@ -1,8 +1,10 @@
 from agent import Agent
 from monitor import interact
 import gym
-
 import numpy as np
+import warnings
+
+warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 env = gym.make('Taxi-v3')
 initial_beta = 0.1087677305041776

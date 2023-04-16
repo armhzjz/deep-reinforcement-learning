@@ -28,14 +28,16 @@ def interact(env, agent, num_episodes=20000, window=100, print_logs=True):
     # for each episode
     for i_episode in range(1, num_episodes+1):
         # begin the episode
-        state = env.reset()
+        reset_tuple = env.reset()
+        state = reset_tuple[0]
         # initialize the sampled reward
         samp_reward = 0
         while True:
             # agent selects an action
             action = agent.select_action(state)
             # agent performs the selected action
-            next_state, reward, done, _ = env.step(action)
+            next_state, reward, terminated, truncated, _ = env.step(action)
+            done = terminated or truncated
             # agent performs internal updates based on sampled experience
             agent.step(state, action, reward, next_state, done)
             # update the sampled reward
@@ -46,7 +48,7 @@ def interact(env, agent, num_episodes=20000, window=100, print_logs=True):
                 # save final sampled reward
                 samp_rewards.append(samp_reward)
                 break
-        if (i_episode >= 100):
+        if len(samp_rewards) == window:
             # get average reward from last 100 episodes
             avg_reward = np.mean(samp_rewards)
             # append to deque
