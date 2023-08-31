@@ -2,6 +2,7 @@ name: DeepRL
 channels:
   - conda-forge
   - anaconda
+  - pytorch
 dependencies:
   - python=3.10
   - gym
@@ -12,3 +13,6 @@ dependencies:
   - hyperopt
   - pyglet
   - numpy
+  - pytorch
+  - torchvision
+  - torchaudio
