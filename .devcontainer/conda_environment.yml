@@ -1,18 +1,19 @@
 name: DeepRL
 channels:
-  - conda-forge
   - anaconda
+  - conda-forge
   - pytorch
 dependencies:
-  - python=3.10
   - gym
+  - hyperopt
   - jupyter
   - jupyterlab
   - matplotlib-base
-  - seaborn
-  - hyperopt
-  - pyglet
   - numpy
+  - pip
+  - pyglet
+  - python=3.10
   - pytorch
-  - torchvision
+  - seaborn
   - torchaudio
+  - torchvision
