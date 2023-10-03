@@ -5,6 +5,7 @@ channels:
   - pytorch
 dependencies:
   - gym
+  - gymnasium
   - hyperopt
   - jupyter
   - jupyterlab
