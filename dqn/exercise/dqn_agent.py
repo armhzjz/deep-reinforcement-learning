@@ -11,18 +11,16 @@ import torch.optim as optim
 
 BUFFER_SIZE = int(1e5)  # replay buffer size
 BATCH_SIZE = 64         # minibatch size
-GAMMA = 0.99            # discount factor
-TAU = 1e-3              # for soft update of target parameters
-LR = 0.001 # 5e-4               # learning rate
-UPDATE_EVERY = 4        # how often to update the network
-PARAM_UPDATE_EVERY = UPDATE_EVERY * 2
+GAMMA = 0.988            # discount factor
+TAU = 1e-1              # for soft update of target parameters
+LR = 5e-4               # learning rate
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 class Agent():
     """Interacts with and learns from the environment."""
 
-    def __init__(self, state_size, action_size, seed):
+    def __init__(self, state_size, action_size, seed, C=1):
         """Initialize an Agent object.
 
         Params
@@ -43,27 +41,29 @@ class Agent():
         self.qnetwork_target.apply(self.init_weights)
         #self.optimizer = optim.Adam(self.qnetwork_local.parameters(), lr=LR)
         self.optimizer = optim.RMSprop(self.qnetwork_local.parameters(), lr=LR)
-        self.scheduler = optim.lr_scheduler.LinearLR(self.optimizer, start_factor=1., end_factor=0.5, total_iters=50000)
+        #self.scheduler = optim.lr_scheduler.LinearLR(self.optimizer, start_factor=1., end_factor=0.5, total_iters=50000)
 
         # Replay memory
         self.memory = ReplayBuffer(action_size, BUFFER_SIZE, BATCH_SIZE, seed)
         # Initialize time step (for updating every UPDATE_EVERY steps)
-        self.t_step = 0
         self.parameter_update_step = 0
         self.last_action = random.choice(np.arange(self.action_size))
+        # softupdates frecuency w.r.t. a learn step
+        self.C = C
+        self.target_update_step = 0
 
     def init_weights(self, m):
         if isinstance(m, nn.Linear):
             nn.init.xavier_uniform_(m.weight, gain=nn.init.calculate_gain('relu'))
-            #m.bias.data.fill_(0.00)
+            #nn.init.zeros_(m.weight)
+            m.bias.data.fill_(0.00)
 
-    def step(self, state, action, reward, next_state, done):
+    def step(self, state, action, reward, next_state, done, t_step):
         # Save experience in replay memory
         self.memory.add(state, action, reward, next_state, done)
 
-        # Learn every UPDATE_EVERY time steps.
-        self.t_step = (self.t_step + 1) % UPDATE_EVERY
-        if self.t_step == 0:
+        # Learn every UPDATE_EVERY time steps (every four steps - controlled on the notebook.
+        if t_step == 0:
             # If enough samples are available in memory, get random subset and learn
             if len(self.memory) > BATCH_SIZE:
                 experiences = self.memory.sample()
@@ -84,13 +84,10 @@ class Agent():
         self.qnetwork_local.train()
 
         # Epsilon-greedy action selection
-        if self.t_step == 0:
-            if random.random() > eps:
-                self.last_action = np.argmax(action_values.cpu().data.numpy())
-                return self.last_action
-            else:
-                self.last_action = random.choice(np.arange(self.action_size))
-                return self.last_action
+        if random.random() > eps:
+            self.last_action = np.argmax(action_values.cpu().data.numpy())
+        else:
+            self.last_action = random.choice(np.arange(self.action_size))
         return self.last_action
 
     def learn(self, experiences, gamma):
@@ -121,7 +118,7 @@ class Agent():
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
-        self.scheduler.step()
+        #self.scheduler.step()
 
         # ------------------- update target network ------------------- #
         self.soft_update(self.qnetwork_local, self.qnetwork_target, TAU)
@@ -136,10 +133,10 @@ class Agent():
             target_model (PyTorch model): weights will be copied to
             tau (float): interpolation parameter
         """
-        #self.parameter_update_step = (self.parameter_update_step + 1) % PARAM_UPDATE_EVERY
-        #if self.parameter_update_step == 0:
-        for target_param, local_param in zip(target_model.parameters(), local_model.parameters()):
-            target_param.data.copy_(tau*local_param.data + (1.0-tau)*target_param.data)
+        self.target_update_step = (self.target_update_step +1) % self.C
+        if self.target_update_step == 0:
+            for target_param, local_param in zip(target_model.parameters(), local_model.parameters()):
+                target_param.data.copy_(tau*local_param.data + (1.0-tau)*target_param.data)
 
 
 class ReplayBuffer:

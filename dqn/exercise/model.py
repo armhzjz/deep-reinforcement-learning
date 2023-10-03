@@ -27,11 +27,9 @@ class QNetwork(nn.Module):
         # linear layer 512 -> action_size
         #self.fc2 = nn.Linear(512, action_size)
         #self.relu = nn.ReLU()
-        self.fc1 = nn.Linear(8,16)
-        self.fc2 = nn.Linear(16,32)
-        self.fc3 = nn.Linear(32,16)
-        self.fc4 = nn.Linear(16,8)
-        self.fc5 = nn.Linear(8, action_size)
+        self.fc1 = nn.Linear(8,512)
+        self.fc2 = nn.Linear(512,256)
+        self.fc3 = nn.Linear(256, action_size)
         self.relu = nn.ReLU()
 
     def forward(self, state):
@@ -42,7 +40,5 @@ class QNetwork(nn.Module):
         #o = self.relu(self.fc1(o.view(-1, 64*7*7)))
         o = self.relu(self.fc1(state))
         o = self.relu(self.fc2(o))
-        o = self.relu(self.fc3(o))
-        o = self.relu(self.fc4(o))
-        return self.fc5(o)
-        
+        return self.fc3(o)
+
