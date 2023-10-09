@@ -27,7 +27,8 @@ class QNetwork(nn.Module):
         # linear layer 512 -> action_size
         #self.fc2 = nn.Linear(512, action_size)
         #self.relu = nn.ReLU()
-        self.fc1 = nn.Linear(8,512)
+        self.fc1_l = nn.Linear(8,512)
+        self.fc1_r = nn.Linear(8,512)
         self.fc2 = nn.Linear(512,256)
         self.fc3 = nn.Linear(256, action_size)
         self.relu = nn.ReLU()
@@ -38,7 +39,8 @@ class QNetwork(nn.Module):
         #o = self.relu(self.conv_hidden2(o))
         #o = self.relu(self.conv_hidden3(o))
         #o = self.relu(self.fc1(o.view(-1, 64*7*7)))
-        o = self.relu(self.fc1(state))
-        o = self.relu(self.fc2(o))
+        o_l = self.relu(self.fc1_l(state))
+        o_r = self.relu(self.fc1_r(state))
+        o = self.relu(self.fc2(o_l + o_r))
         return self.fc3(o)
-
+        
