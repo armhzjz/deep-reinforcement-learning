@@ -46,19 +46,21 @@
             },
             // Add the IDs of extensions you want installed when the container is created.
             "extensions": [
-                "ms-python.python",
-                "ms-toolsai.jupyter",
-                "ms-python.vscode-pylance",
-                "ms-vscode-remote.remote-ssh",
-                "coenraads.bracket-pair-colorizer-2",
-                "mhutchie.git-graph",
-                "github.remotehub",
-                "eamodio.gitlens",
-                "oderwat.indent-rainbow",
-                "shardulm94.trailing-spaces",
-                "wakatime.vscode-wakatime",
-                "ms-azuretools.vscode-docker"
-            ]
+				"ms-python.python",
+				"ms-toolsai.jupyter",
+				"ms-python.vscode-pylance",
+				"ms-vscode-remote.remote-ssh",
+				"coenraads.bracket-pair-colorizer-2",
+				"mhutchie.git-graph",
+				"github.remotehub",
+				"eamodio.gitlens",
+				"oderwat.indent-rainbow",
+				"shardulm94.trailing-spaces",
+				"wakatime.vscode-wakatime",
+				"ms-azuretools.vscode-docker",
+				"tal7aouy.icons",
+				"eeyore.yapf"
+			]
         }
     }
 }
