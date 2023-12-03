@@ -12,7 +12,7 @@ import torch.optim as optim
 BUFFER_SIZE = int(1e5)  # replay buffer size
 BATCH_SIZE = 64         # minibatch size
 GAMMA = 0.988            # discount factor
-TAU = 1e-1              # for soft update of target parameters
+TAU = 3e-1              # for soft update of target parameters
 LR = 5e-4               # learning rate
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -20,7 +20,7 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 class Agent():
     """Interacts with and learns from the environment."""
 
-    def __init__(self, state_size, action_size, seed, C=1):
+    def __init__(self, state_size, action_size, seed, C=2):
         """Initialize an Agent object.
 
         Params
@@ -34,11 +34,13 @@ class Agent():
         self.seed = random.seed(seed)
 
         # Q-Network
-        self.qnetwork_local = QNetwork(state_size, action_size, seed).to(device)
-        self.qnetwork_target = QNetwork(state_size, action_size, seed).to(device)
+        self.qnetwork_local = QNetwork(state_size, action_size, 'local', seed).to(device)
+        self.qnetwork_target = QNetwork(state_size, action_size, 'target', seed).to(device)
         # initialize weights
         self.qnetwork_local.apply(self.init_weights)
         self.qnetwork_target.apply(self.init_weights)
+        self.q_local = self.qnetwork_local
+        self.q_target = self.qnetwork_target
         #self.optimizer = optim.Adam(self.qnetwork_local.parameters(), lr=LR)
         self.optimizer = optim.RMSprop(self.qnetwork_local.parameters(), lr=LR)
         #self.scheduler = optim.lr_scheduler.LinearLR(self.optimizer, start_factor=1., end_factor=0.5, total_iters=50000)
@@ -51,6 +53,13 @@ class Agent():
         # softupdates frecuency w.r.t. a learn step
         self.C = C
         self.target_update_step = 0
+
+    def __del__(self):
+        """ Delete an agent intance.
+            Explicitly remove qnetworks created whithin this agent
+        """
+        del self.qnetwork_local
+        del self.qnetwork_target
 
     def init_weights(self, m):
         if isinstance(m, nn.Linear):
@@ -102,18 +111,9 @@ class Agent():
 
         ## TODO: compute and minimize the loss
         "*** YOUR CODE HERE ***"
-        #for s, a, r, ns, d in zip(states, actions, rewards, next_states, dones):
-        #    target_action_val = self.qnetwork_target(ns).detach().max(1)[0].squeeze()
-        #    expected_val = self.qnetwork_local(s).squeeze()[a]
-        #    y = r + gamma * target_action_val * (1 - d)
-        #    loss = np.clip(F.mse_loss(y, expected_val), -1., 1.)
-        #    self.optimizer.zero_grad()
-        #    loss.backward()
-        #    self.optimizer.step()
-            
-        target_action_vals = self.qnetwork_target(next_states).detach().max(1)[0].unsqueeze(1)
+        target_action_vals = self.q_target(next_states).detach().max(1)[0].unsqueeze(1)
         targets = rewards + (gamma * target_action_vals * (1 - dones))
-        expected = self.qnetwork_local(states).gather(1, actions)
+        expected = self.q_local(states).gather(1, actions)
         loss = F.mse_loss(targets, expected) #.clip(-1., 1.)
         self.optimizer.zero_grad()
         loss.backward()
@@ -121,7 +121,7 @@ class Agent():
         #self.scheduler.step()
 
         # ------------------- update target network ------------------- #
-        self.soft_update(self.qnetwork_local, self.qnetwork_target, TAU)
+        self.soft_update(self.q_local, self.q_target, TAU)
 
     def soft_update(self, local_model, target_model, tau):
         """Soft update model parameters.
@@ -137,6 +137,13 @@ class Agent():
         if self.target_update_step == 0:
             for target_param, local_param in zip(target_model.parameters(), local_model.parameters()):
                 target_param.data.copy_(tau*local_param.data + (1.0-tau)*target_param.data)
+        #  returns either the local or the target network,
+        #  each with 50% probability
+        self.q_target = random.choices(
+            [self.qnetwork_local, self.qnetwork_target],
+            [0.5, 0.5]
+        )[0]
+        self.q_local = self.qnetwork_local if self.q_target.nettype == 'target' else self.qnetwork_target
 
 
 class ReplayBuffer:
@@ -162,7 +169,7 @@ class ReplayBuffer:
         """Add a new experience to memory."""
         e = self.experience(state, action, reward, next_state, done)  # np.clip(reward, -1., 1.), next_state, done)
         #e = self.experience(state, action, np.clip(reward, -1., 1.), next_state, done)
-        
+
         self.memory.append(e)
 
     def sample(self):
