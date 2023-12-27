@@ -33,7 +33,7 @@ class QNetwork(nn.Module):
         self.relu = nn.ReLU()
 
     def __del__(self):
-        """ Before the instance is destroyed, remove its declared network tye"""
+        """ Before the instance is destroyed, remove its declared network type"""
         QNetwork.networks.remove(self.identifier)
 
     @property
