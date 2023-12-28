@@ -5,6 +5,7 @@
     It can be treated as if it were a list
     Author: armhzjz@pm.me
 '''
+import numpy as np
 
 
 class CircularBuffer(list):
@@ -46,6 +47,9 @@ class CircularBuffer(list):
         '''
         super(CircularBuffer, self).clear()
         self._init(self._buff_capacity, self._init_vals)
+
+    def as_numpy(self) -> np.array:
+        return np.array(self)
 
     def _is_buff_full(self) -> bool:
         ''' Returns True if the buffer is full; return false otherwise'''
