@@ -53,7 +53,7 @@ class CircularBuffer(list):
 
     def _is_buff_full(self) -> bool:
         ''' Returns True if the buffer is full; return false otherwise'''
-        return super(CircularBuffer, self).__len__() == self._buff_capacity
+        return self.__len__() == self._buff_capacity
 
     def __getitem__(self, idx: int) -> any:
         ''' Returns the value pointed at by 'idx' '''
@@ -77,7 +77,7 @@ class CircularBuffer(list):
     @property
     def size(self) -> int:
         ''' The current buffer size (current numbers of elements on the buffer) '''
-        return super(CircularBuffer, self).__len__()
+        return self.__len__()
 
     @property
     def isFull(self) -> bool:
