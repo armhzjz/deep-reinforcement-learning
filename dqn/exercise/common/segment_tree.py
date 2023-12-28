@@ -44,8 +44,8 @@ class SegmentTree(object):
             neutral element for the operation above. eg. float('-inf')
             for max and 0 for sum.
         '''
-        assert capacity > 0 and capacity & (capacity -
-                                            1) == 0, 'capacity must be positive and a power of 2.'
+        if not (capacity > 0 and capacity & (capacity - 1) == 0):
+            raise Exception('capacity must be positive and a power of 2.')
         self._capacity: int = capacity
         self._value: list = [neutral_element] * 2 * capacity
         self._operation = operation
@@ -99,7 +99,8 @@ class SegmentTree(object):
             idx //= 2
 
     def __getitem__(self, idx: int) -> int or float:
-        assert 0 <= idx < self._capacity
+        if idx < 0 or self._capacity <= idx:
+            raise Exception('Index out of buffer capacity\'s reange')
         return self._value[self._capacity + idx]
 
 
@@ -132,7 +133,9 @@ class SumSegmentTree(SegmentTree):
         idx: int
             highest index satisfying the prefixsum constraint
         '''
-        assert 0 <= prefixsum <= self.sum() + 1e-5
+        if not (0 <= prefixsum <= self.sum() + 1e-5):
+            raise Exception(
+                'prefixsum must be a value between 0 and the highest amount in the segment tree.')
         idx: int = 1
         while idx < self._capacity:
             if self._value[2 * idx] > prefixsum:
