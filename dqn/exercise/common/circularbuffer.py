@@ -18,14 +18,13 @@ class CircularBuffer(list):
 
     def __init__(self, buff_capacity: int = 1, init_values: any = None) -> None:
         super(CircularBuffer, self).__init__()
-        self._buff_capacity = buff_capacity
-        self._init_vals = init_values
-        self._init(self._buff_capacity, self._init_vals)
-
-    def _init(self, buff_capacity: int, init_values: any) -> None:
-        if init_values is not None:
-            super(CircularBuffer, self).extend([init_values for _ in range(buff_capacity)])
         self._buff_capacity: int = buff_capacity
+        self._init_vals = init_values
+        self._init(self._init_vals)
+
+    def _init(self, init_values: any) -> None:
+        if init_values is not None:
+            super(CircularBuffer, self).extend([init_values for _ in range(self.buff_capacity)])
         self._current_index = self._prev_index = 0
 
     def append(self, element: any) -> int:
@@ -46,7 +45,7 @@ class CircularBuffer(list):
             created, the buffer will be initialized to this value again.
         '''
         super(CircularBuffer, self).clear()
-        self._init(self._buff_capacity, self._init_vals)
+        self._init(self._init_vals)
 
     def as_numpy(self) -> np.array:
         return np.array(self)
