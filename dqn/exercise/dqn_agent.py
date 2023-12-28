@@ -39,8 +39,8 @@ class Agent():
         self.qnetwork_local = QNetwork(state_size, action_size, 'local', seed).to(device)
         self.qnetwork_target = QNetwork(state_size, action_size, 'target', seed).to(device)
         # initialize weights
-        self.qnetwork_local.apply(self.init_weights)
-        self.qnetwork_target.apply(self.init_weights)
+        self.qnetwork_local.apply(self._init_weights)
+        self.qnetwork_target.apply(self._init_weights)
         self.q_local = self.qnetwork_local
         self.q_target = self.qnetwork_target
         #self.optimizer = optim.Adam(self.qnetwork_local.parameters(), lr=LR)
@@ -63,7 +63,7 @@ class Agent():
         del self.qnetwork_local
         del self.qnetwork_target
 
-    def init_weights(self, m):
+    def _init_weights(self, m):
         if isinstance(m, nn.Linear):
             nn.init.xavier_uniform_(m.weight, gain=nn.init.calculate_gain('relu'))
             #nn.init.zeros_(m.weight)
