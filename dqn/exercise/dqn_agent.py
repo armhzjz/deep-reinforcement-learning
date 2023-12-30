@@ -3,7 +3,7 @@ import random
 from collections import namedtuple, deque
 
 from model import QNetwork
-from common.replay_buffer import ReplayBuffer
+from common.replay_buffer import ReplayBuffer, PrioritizedReplayBuffer
 
 import torch
 import torch.nn as nn
@@ -31,6 +31,18 @@ class Agent():
             action_size (int): dimension of each action
             seed (int): random seed
         """
+        # Replay memory
+        self.memory = ReplayBuffer(action_size, BUFFER_SIZE)
+        self._init(state_size=state_size, action_size=action_size, seed=seed, C=C)
+
+    def __del__(self):
+        """ Delete an agent intance.
+            Explicitly remove qnetworks created whithin this agent
+        """
+        del self.qnetwork_local
+        del self.qnetwork_target
+
+    def _init(self, state_size: int, action_size: int or tuple, seed: float, C: int) -> None:
         self.state_size = state_size
         self.action_size = action_size
         self.seed = random.seed(seed)
@@ -43,12 +55,7 @@ class Agent():
         self.qnetwork_target.apply(self._init_weights)
         self.q_local = self.qnetwork_local
         self.q_target = self.qnetwork_target
-        #self.optimizer = optim.Adam(self.qnetwork_local.parameters(), lr=LR)
         self.optimizer = optim.RMSprop(self.qnetwork_local.parameters(), lr=LR)
-        #self.scheduler = optim.lr_scheduler.LinearLR(self.optimizer, start_factor=1., end_factor=0.5, total_iters=50000)
-
-        # Replay memory
-        self.memory = ReplayBuffer(action_size, BUFFER_SIZE)
         # Initialize time step (for updating every UPDATE_EVERY steps)
         self.parameter_update_step = 0
         self.last_action = random.choice(np.arange(self.action_size))
@@ -56,29 +63,26 @@ class Agent():
         self.C = C
         self.target_update_step = 0
 
-    def __del__(self):
-        """ Delete an agent intance.
-            Explicitly remove qnetworks created whithin this agent
-        """
-        del self.qnetwork_local
-        del self.qnetwork_target
-
     def _init_weights(self, m):
         if isinstance(m, nn.Linear):
             nn.init.xavier_uniform_(m.weight, gain=nn.init.calculate_gain('relu'))
             #nn.init.zeros_(m.weight)
             m.bias.data.fill_(0.00)
 
-    def step(self, state, action, reward, next_state, done, t_step):
+    def _underline_step(self, state, action, reward, next_state, done, t_step) -> bool:
         # Save experience in replay memory
         self.memory.add(state, action, reward, next_state, done)
-
         # Learn every UPDATE_EVERY time steps (every four steps - controlled on the notebook.
         if t_step == 0:
             # If enough samples are available in memory, get random subset and learn
             if len(self.memory) > BATCH_SIZE:
-                experiences = self.memory.sample(BATCH_SIZE)
-                self.learn(experiences, GAMMA)
+                return True
+        return False
+
+    def step(self, state, action, reward, next_state, done, t_step):
+        if self._underline_step(state, action, reward, next_state, done, t_step):
+            experiences = self.memory.sample(BATCH_SIZE)
+            self.learn(experiences, GAMMA)
 
     def act(self, state, eps=0.):
         """Returns actions for given state as per current policy.
@@ -120,7 +124,6 @@ class Agent():
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
-        #self.scheduler.step()
 
         # ------------------- update target network ------------------- #
         self.soft_update(self.q_local, self.q_target, TAU)
@@ -144,3 +147,42 @@ class Agent():
         #  each with 50% probability
         self.q_target = random.choices([self.qnetwork_local, self.qnetwork_target], [0.5, 0.5])[0]
         self.q_local = self.qnetwork_local if self.q_target.nettype == 'target' else self.qnetwork_target
+
+
+class AgentPrioritizedReplayBuf(Agent):
+
+    def __init__(self,
+                 state_size: int,
+                 action_size: int or tuple,
+                 seed: float,
+                 C: int = 2,
+                 alpha: float = 1.):
+        self.memory = PrioritizedReplayBuffer(action_size=action_size,
+                                              buffer_size=BUFFER_SIZE,
+                                              alpha=alpha)
+        self._init(state_size=state_size, action_size=action_size, seed=seed, C=C)
+
+    def step(self, state, action, reward, next_state, done, t_step, beta):
+        if self._underline_step(state, action, reward, next_state, done, t_step):
+            experiences, weights, indices = self.memory.sample(batch_size=BATCH_SIZE, beta=beta)
+            self.learn(experiences, GAMMA)
+
+    def learn(self, experiences: any, gamma: float, weights: any, indices: any) -> None:
+        """Update value parameters using given batch of experience tuples.
+
+        Params
+        ======
+            experiences (Tuple[torch.Tensor]): tuple of (s, a, r, s', done) tuples
+            gamma (float): discount factor
+        """
+        states, actions, rewards, next_states, dones = experiences
+
+        ## TODO: compute and minimize the loss
+        "*** YOUR CODE HERE ***"
+        target_action_vals = self.q_target(next_states).detach().max(1)[0].unsqueeze(1)
+        targets = rewards + (gamma * target_action_vals * (1 - dones))
+        expected = self.q_local(states).gather(1, actions)
+        loss = F.mse_loss(targets, expected)  #.clip(-1., 1.)
+        self.optimizer.zero_grad()
+        loss.backward()
+        self.optimizer.step()
