@@ -69,7 +69,7 @@ class PrioritizedReplayBuffer(ReplayBuffer):
         super(PrioritizedReplayBuffer, self).__init__(action_size, buffer_size)
         if alpha < 0:
             raise Exception('Alpha must be bigger than zero')
-        self.alpha = alpha
+        self._alpha = alpha
         capacity = 1
         while capacity < buffer_size:
             capacity *= 2
@@ -79,8 +79,8 @@ class PrioritizedReplayBuffer(ReplayBuffer):
 
     def add(self, *args, **kwargs) -> None:
         idx = super(PrioritizedReplayBuffer, self).add(*args, **kwargs)
-        self._it_sum[idx] = self._max_priority**self.alpha
-        self._it_min[idx] = self._max_priority**self.alpha
+        self._it_sum[idx] = self._max_priority**self._alpha
+        self._it_min[idx] = self._max_priority**self._alpha
 
     def _sample_proportional(self, batch_size: int) -> list:
         idxs = []
@@ -122,16 +122,16 @@ class PrioritizedReplayBuffer(ReplayBuffer):
                 raise Exception('Priorities cannot be zero values')
             if not (0 <= idx < self.__len__()):
                 raise Exception('Index is out of Buffer capacity\'s range')
-            self._it_sum[idx] = priority**self.alpha
-            self._it_min[idx] = priority**self.alpha
+            self._it_sum[idx] = priority**self._alpha
+            self._it_min[idx] = priority**self._alpha
             self._max_priority = max(self._max_priority, priority)
 
     @property
     def alpha(self) -> float:
         ''' Returns the value of alpha '''
-        return self.alpha
+        return self._alpha
 
     @alpha.setter
     def alpha(self, new_a: float) -> None:
         ''' Sets a new value of alpha '''
-        self.alpha = new_a
+        self._alpha = new_a
