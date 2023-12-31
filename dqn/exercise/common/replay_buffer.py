@@ -125,3 +125,13 @@ class PrioritizedReplayBuffer(ReplayBuffer):
             self._it_sum[idx] = priority**self.alpha
             self._it_min[idx] = priority**self.alpha
             self._max_priority = max(self._max_priority, priority)
+
+    @property
+    def alpha(self) -> float:
+        ''' Returns the value of alpha '''
+        return self.alpha
+
+    @alpha.setter
+    def alpha(self, new_a: float) -> None:
+        ''' Sets a new value of alpha '''
+        self.alpha = new_a
