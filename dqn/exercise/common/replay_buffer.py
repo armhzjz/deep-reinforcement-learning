@@ -108,7 +108,7 @@ class PrioritizedReplayBuffer(ReplayBuffer):
             sample_prob = self._it_sum[idx] / self._it_sum.sum()
             sample_weight = (sample_prob * self.__len__())**-beta
             importance_sampling_weights.append(sample_weight / max_weight)
-        sampled_experiences = self.memory.as_numpy()[idxs]
+        sampled_experiences = [self.memory[i] for i in idxs]
         return self._build_batch(sampled_experiences) + (torch.from_numpy(
             np.vstack(importance_sampling_weights)).float().to(device),) + (torch.from_numpy(
                 np.vstack(idxs)).int().to(device),)

@@ -118,13 +118,12 @@ class Agent():
         ## TODO: compute and minimize the loss
         "*** YOUR CODE HERE ***"
         target_action_vals = self.q_target(next_states).detach().max(1)[0].unsqueeze(1)
-        targets = rewards + (gamma * target_action_vals * (1 - dones))
+        td_err = rewards + (gamma * target_action_vals * (1 - dones))
         expected = self.q_local(states).gather(1, actions)
-        loss = F.mse_loss(targets, expected)  #.clip(-1., 1.)
+        loss = F.mse_loss(td_err, expected)  #.clip(-1., 1.)
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
-
         # ------------------- update target network ------------------- #
         self.soft_update(self.q_local, self.q_target, TAU)
 
@@ -156,16 +155,19 @@ class AgentPrioritizedReplayBuf(Agent):
                  action_size: int or tuple,
                  seed: float,
                  C: int = 2,
-                 alpha: float = 1.):
+                 alpha: float = 0.):
         self.memory = PrioritizedReplayBuffer(action_size=action_size,
                                               buffer_size=BUFFER_SIZE,
                                               alpha=alpha)
         self._init(state_size=state_size, action_size=action_size, seed=seed, C=C)
 
-    def step(self, state, action, reward, next_state, done, t_step, beta):
+    def step(self, state: any, action: any, reward: float, next_state: any, done: bool, t_step,
+             new_alpha: float, new_beta: float) -> None:
+        self.memory.alpha = new_alpha
         if self._underline_step(state, action, reward, next_state, done, t_step):
-            experiences, weights, indices = self.memory.sample(batch_size=BATCH_SIZE, beta=beta)
-            self.learn(experiences, GAMMA)
+            *experiences, weights, indices = self.memory.sample(batch_size=BATCH_SIZE,
+                                                                beta=new_beta)
+            self.learn(experiences=experiences, gamma=GAMMA, weights=weights, indices=indices)
 
     def learn(self, experiences: any, gamma: float, weights: any, indices: any) -> None:
         """Update value parameters using given batch of experience tuples.
@@ -180,9 +182,13 @@ class AgentPrioritizedReplayBuf(Agent):
         ## TODO: compute and minimize the loss
         "*** YOUR CODE HERE ***"
         target_action_vals = self.q_target(next_states).detach().max(1)[0].unsqueeze(1)
-        targets = rewards + (gamma * target_action_vals * (1 - dones))
+        td_err = rewards + (gamma * target_action_vals * (1 - dones))
+        self.memory.update_priorities(idxs=indices, priorities=abs(td_err) + 5e-5)
+        td_err *= weights  # multiply each target for its corresponding weights
         expected = self.q_local(states).gather(1, actions)
-        loss = F.mse_loss(targets, expected)  #.clip(-1., 1.)
+        loss = F.mse_loss(td_err, expected)  #.clip(-1., 1.)
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
+        # ------------------- update target network ------------------- #
+        self.soft_update(self.q_local, self.q_target, TAU)
