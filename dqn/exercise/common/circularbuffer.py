@@ -92,24 +92,24 @@ class CircularBuffer(list):
 
     def pop(self) -> None:
         ''' Not supported '''
-        pass
+        raise NotImplementedError
 
     def extend(self) -> None:
         ''' Not supported '''
-        pass
+        raise NotImplementedError
 
     def insert(self) -> None:
         ''' Not supported '''
-        pass
+        raise NotImplementedError
 
     def remove(self) -> None:
         ''' Not supported '''
-        pass
+        raise NotImplementedError
 
     def reverse(self) -> None:
         ''' Not supported '''
-        pass
+        raise NotImplementedError
 
     def sort(self) -> None:
         ''' Not supported '''
-        pass
+        raise NotImplementedError
