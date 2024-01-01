@@ -20,6 +20,12 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 
 class Agent():
+
+    def __init__(self):
+        raise NotImplementedError
+
+
+class DoubleDQN_Agent():
     """Interacts with and learns from the environment."""
 
     def __init__(self, state_size, action_size, seed, C=2):
@@ -39,7 +45,7 @@ class Agent():
         """ Delete an agent intance.
             Explicitly remove qnetworks created whithin this agent
         """
-        del self.qnetwork_local
+        del self._qnetwork
         del self.qnetwork_target
 
     def _init(self, state_size: int, action_size: int or tuple, seed: float, C: int) -> None:
@@ -48,14 +54,14 @@ class Agent():
         self.seed = random.seed(seed)
 
         # Q-Network
-        self.qnetwork_local = QNetwork(state_size, action_size, 'local', seed).to(device)
+        self._qnetwork = QNetwork(state_size, action_size, 'local', seed).to(device)
         self.qnetwork_target = QNetwork(state_size, action_size, 'target', seed).to(device)
         # initialize weights
-        self.qnetwork_local.apply(self._init_weights)
+        self._qnetwork.apply(self._init_weights)
         self.qnetwork_target.apply(self._init_weights)
-        self.q_local = self.qnetwork_local
-        self.q_target = self.qnetwork_target
-        self.optimizer = optim.RMSprop(self.qnetwork_local.parameters(), lr=LR)
+        self._training_model = self._qnetwork
+        self._target_model = self.qnetwork_target
+        self.optimizer = optim.RMSprop(self._qnetwork.parameters(), lr=LR)
         # Initialize time step (for updating every UPDATE_EVERY steps)
         self.parameter_update_step = 0
         self.last_action = random.choice(np.arange(self.action_size))
@@ -93,10 +99,10 @@ class Agent():
             eps (float): epsilon, for epsilon-greedy action selection
         """
         state = torch.from_numpy(np.array(state, dtype=float)).float().unsqueeze(0).to(device)
-        self.qnetwork_local.eval()
+        self._qnetwork.eval()
         with torch.no_grad():
-            action_values = self.qnetwork_local(state)
-        self.qnetwork_local.train()
+            action_values = self._qnetwork(state)
+        self._qnetwork.train()
 
         # Epsilon-greedy action selection
         if random.random() > eps:
@@ -117,15 +123,15 @@ class Agent():
 
         ## TODO: compute and minimize the loss
         "*** YOUR CODE HERE ***"
-        target_action_vals = self.q_target(next_states).detach().max(1)[0].unsqueeze(1)
-        td_err = rewards + (gamma * target_action_vals * (1 - dones))
-        expected = self.q_local(states).gather(1, actions)
-        loss = F.mse_loss(td_err, expected)  #.clip(-1., 1.)
+        Q_next = self._target_model(next_states).detach().max(1)[0].unsqueeze(1)
+        Q_target = rewards + (gamma * Q_next * (1 - dones))
+        Q = self._training_model(states).gather(1, actions)
+        loss = F.mse_loss(Q_target, Q)
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
         # ------------------- update target network ------------------- #
-        self.soft_update(self.q_local, self.q_target, TAU)
+        self.soft_update(self._training_model, self._target_model, TAU)
 
     def soft_update(self, local_model, target_model, tau):
         """Soft update model parameters.
@@ -144,8 +150,12 @@ class Agent():
                 target_param.data.copy_(tau * local_param.data + (1.0 - tau) * target_param.data)
         #  returns either the local or the target network,
         #  each with 50% probability
-        self.q_target = random.choices([self.qnetwork_local, self.qnetwork_target], [0.5, 0.5])[0]
-        self.q_local = self.qnetwork_local if self.q_target.nettype == 'target' else self.qnetwork_target
+        self._target_model = random.choices([self._qnetwork, self.qnetwork_target], [0.5, 0.5])[0]
+        self._training_model = self._qnetwork if self._target_model.nettype == 'target' else self.qnetwork_target
+
+    @property
+    def qnetwork_model(self):
+        return self._qnetwork
 
 
 class AgentPrioritizedReplayBuf(Agent):
@@ -181,14 +191,15 @@ class AgentPrioritizedReplayBuf(Agent):
 
         ## TODO: compute and minimize the loss
         "*** YOUR CODE HERE ***"
-        target_action_vals = self.q_target(next_states).detach().max(1)[0].unsqueeze(1)
-        td_err = rewards + (gamma * target_action_vals * (1 - dones))
-        self.memory.update_priorities(idxs=indices, priorities=abs(td_err) + 5e-5)
-        td_err *= weights  # multiply each target for its corresponding weights
-        expected = self.q_local(states).gather(1, actions)
-        loss = F.mse_loss(td_err, expected)  #.clip(-1., 1.)
+        Q_next = self._target_model(next_states).detach().max(1)[0].unsqueeze(1)
+        Q_target = rewards + (gamma * Q_next * (1 - dones))
+        Q = self._training_model(states).gather(1, actions)
+        td_error = torch.abs(Q - Q_target).detach()
+        loss = torch.mean((Q - Q_target)**2 * weights)
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
         # ------------------- update target network ------------------- #
-        self.soft_update(self.q_local, self.q_target, TAU)
+        self.soft_update(self._training_model, self._target_model, TAU)
+        # update priorities
+        self.memory.update_priorities(idxs=indices, priorities=td_error.numpy() + 5e-5)
