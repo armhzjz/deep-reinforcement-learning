@@ -158,7 +158,7 @@ class DoubleDQN_Agent():
         return self._qnetwork
 
 
-class AgentPrioritizedReplayBuf(Agent):
+class AgentPrioritizedReplayBuf(DoubleDQN_Agent):
 
     def __init__(self,
                  state_size: int,
