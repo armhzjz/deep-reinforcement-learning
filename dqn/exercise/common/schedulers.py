@@ -11,7 +11,7 @@ class LinearScheduler(object):
     '''
 
     def __init__(self, sched_time_span: int, initial_val: float, final_val: float) -> None:
-        if not (0 <= initial_val < final_val):
+        if not (0 <= initial_val < final_val) and (initial_val != final_val):
             raise Exception(
                 'Initial and / or final value do not match constraint (0<=initial<final)')
         if sched_time_span < 2:
@@ -28,6 +28,8 @@ class LinearScheduler(object):
             If step is given, this method returns the linear value that would correspond
             to such step.
         '''
+        if self._init_v == self._final_v:
+            return self._init_v
         if not step:
             self._step += 1
             return min(self._final_v, self._init_v + self._step * self._step_size)

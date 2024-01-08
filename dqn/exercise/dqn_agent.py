@@ -14,7 +14,7 @@ BUFFER_SIZE = int(1e5)  # replay buffer size
 BATCH_SIZE = 64  # minibatch size
 GAMMA = 0.988  # discount factor
 TAU = 3e-1  # for soft update of target parameters
-LR = 5e-4  # learning rate
+LR = 5e-3  # learning rate
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
@@ -61,7 +61,7 @@ class DoubleDQN_Agent():
         self.qnetwork_target.apply(self._init_weights)
         self._training_model = self._qnetwork
         self._target_model = self.qnetwork_target
-        self.optimizer = optim.RMSprop(self._qnetwork.parameters(), lr=LR)
+        self.optimizer = optim.Adam(self._qnetwork.parameters(), lr=LR)
         # Initialize time step (for updating every UPDATE_EVERY steps)
         self.parameter_update_step = 0
         self.last_action = random.choice(np.arange(self.action_size))
