@@ -1,14 +1,8 @@
-class LinearScheduler(object):
-    '''
-        Linear scheduler.
-        Moves linearlly a value from "initial value" to the "final value" in
-        steps of size "(final value - initial value) / number of steps" (number of steps
-        equals the scheduler time span).
-        The class maintains locally the numer of steps it has gone through, so the user
-        only needs to call the "get_step" method on each step of the training phase to retrieve
-        the next linearlly changed value.
-        The user could also specify the number of step for which the value is required.
-    '''
+import numpy as np
+
+
+class Scheduler(object):
+    ''' Base scheduler class '''
 
     def __init__(self, sched_time_span: int, initial_val: float, final_val: float) -> None:
         if not (0 <= initial_val < final_val) and (initial_val != final_val):
@@ -22,18 +16,6 @@ class LinearScheduler(object):
         self._step: int = 0
         self._number_steps: float = final_val - initial_val
         self._step_size: float = self._number_steps / float(sched_time_span)
-
-    def get_step(self, step: int = None) -> float:
-        ''' If step is None, this method returns the next linear step value.
-            If step is given, this method returns the linear value that would correspond
-            to such step.
-        '''
-        if self._init_v == self._final_v:
-            return self._init_v
-        if not step:
-            self._step += 1
-            return min(self._final_v, self._init_v + self._step * self._step_size)
-        return min(self._final_v, self._init_v + step * self._step_size)
 
     @property
     def scheduler_time_span(self) -> int:
@@ -54,3 +36,43 @@ class LinearScheduler(object):
     def scheduler_current_step(self) -> int:
         ''' This is the last step the scheduler has gone through '''
         return self._step
+
+
+class LinearScheduler(Scheduler):
+    '''
+        Linear scheduler.
+        Moves linearlly a value from "initial value" to the "final value" in
+        steps of size "(final value - initial value) / number of steps" (number of steps
+        equals the scheduler time span).
+        The class maintains locally the numer of steps it has gone through, so the user
+        only needs to call the "get_step" method on each step of the training phase to retrieve
+        the next linearlly changed value.
+        The user could also specify the number of step for which the value is required.
+    '''
+
+    def __init__(self, sched_time_span: int, initial_val: float, final_val: float) -> None:
+        super.__init__(self, sched_time_span, initial_val, final_val)
+
+    def get_step(self, step: int = None) -> float:
+        ''' If step is None, this method returns the next linear step value.
+            If step is given, this method returns the linear value that would correspond
+            to such step.
+        '''
+        if not step:
+            self._step += 1
+            return min(self._final_v, self._init_v + self._step * self._step_size)
+        return min(self._final_v, self._init_v + step * self._step_size)
+
+
+class ExponentialAnnealingScheduler(Scheduler):
+
+    def __init__(self, sched_time_span: int, initial_val: float, final_val: float,
+                 rate: float) -> None:
+        super.__init__(self, sched_time_span, initial_val, final_val)
+        self._rate = rate
+
+    def get_step(self, step: int = None) -> float:
+        if not step:
+            self._step += 1
+            return 1 - np.exp(-self._rate * self._step)
+        return 1 - np.exp(-self._rate * step)
