@@ -51,9 +51,9 @@ class LinearScheduler(Scheduler):
     '''
 
     def __init__(self, sched_time_span: int, initial_val: float, final_val: float) -> None:
-        super.__init__(self, sched_time_span, initial_val, final_val)
+        super(LinearScheduler, self).__init__(sched_time_span, initial_val, final_val)
 
-    def get_step(self, step: int = None) -> float:
+    def __call__(self, step: int = None) -> float:
         ''' If step is None, this method returns the next linear step value.
             If step is given, this method returns the linear value that would correspond
             to such step.
@@ -68,11 +68,11 @@ class ExponentialAnnealingScheduler(Scheduler):
 
     def __init__(self, sched_time_span: int, initial_val: float, final_val: float,
                  rate: float) -> None:
-        super.__init__(self, sched_time_span, initial_val, final_val)
+        super(ExponentialAnnealingScheduler, self).__init__(sched_time_span, initial_val, final_val)
         self._rate = rate
 
-    def get_step(self, step: int = None) -> float:
+    def __call__(self, step: int = None) -> float:
         if not step:
             self._step += 1
-            return 1 - np.exp(-self._rate * self._step)
-        return 1 - np.exp(-self._rate * step)
+            return min(self._final_v, self._init_v + (1 - np.exp(-self._rate * self._step)))
+        return min(self._final_V, self._init_v + (1 - np.exp(-self._rate * step)))
