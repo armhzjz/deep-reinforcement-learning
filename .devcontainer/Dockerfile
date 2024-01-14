@@ -39,6 +39,8 @@ USER    ${USERNAME}
 RUN     set -x && \
         sudo --preserve-env apt update && \
         sudo --preserve-env apt install -y \
+                openssh-client \
+                ssh-askpass \
                 vim \
                 less \
                 git \

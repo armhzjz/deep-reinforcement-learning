@@ -22,7 +22,9 @@
         "8888:8888"
     ],
     // Environment variables to set in the container
-    "containerEnv": {},
+    "containerEnv": {
+        "DISPLAY": "${localEnv:DISPLAY}"
+    },
     // Volumes to mount when running the container
     "mounts": [
         "source=${localEnv:HOME}/.gitconfig,target=/home/pythonist/.gitconfig,type=bind",
