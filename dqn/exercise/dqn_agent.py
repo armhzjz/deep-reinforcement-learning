@@ -172,11 +172,11 @@ class AgentPrioritizedReplayBuf(DoubleDQN_Agent):
         self._init(state_size=state_size, action_size=action_size, seed=seed, C=C)
 
     def step(self, state: any, action: any, reward: float, next_state: any, done: bool, t_step,
-             new_alpha: float, new_beta: float) -> None:
-        self.memory.alpha = new_alpha
+             udp_alpha: float, is_beta: float) -> None:
+        self.memory.alpha = udp_alpha
         if self._underline_step(state, action, reward, next_state, done, t_step):
             *experiences, weights, indices = self.memory.sample(batch_size=BATCH_SIZE,
-                                                                beta=new_beta)
+                                                                beta=is_beta)
             self.learn(experiences=experiences, gamma=GAMMA, weights=weights, indices=indices)
 
     def learn(self, experiences: any, gamma: float, weights: any, indices: any) -> None:
