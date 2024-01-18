@@ -2,14 +2,12 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+
 class QNetwork(nn.Module):
     """Actor (Policy) Model."""
     networks = []  #  saves a list of all the identifiers used to create networks
-    def __init__(self,
-        state_size,
-        action_size,
-        identifier: str,
-        seed):
+
+    def __init__(self, state_size, action_size, identifier: str, seed=None):
         """Initialize parameters and build model.
         Params
         ======
@@ -18,10 +16,13 @@ class QNetwork(nn.Module):
             seed (int): Random seed
         """
         if identifier in QNetwork.networks:
-            raise Exception(f'The type of network "{identifier}" already has been declared - {QNetwork.networks}')
+            raise Exception(
+                f'The type of network "{identifier}" already has been declared - {QNetwork.networks}'
+            )
 
         super(QNetwork, self).__init__()
-        self.seed = torch.manual_seed(seed)
+        if seed:
+            self.seed = torch.manual_seed(seed)
         "*** YOUR CODE HERE ***"
         self.identifier = identifier  # identifies if network is target / local
         QNetwork.networks.append(identifier)

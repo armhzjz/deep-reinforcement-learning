@@ -76,3 +76,22 @@ class ExponentialAnnealingScheduler(Scheduler):
             self._step += 1
             return min(self._final_v, self._init_v + (1 - np.exp(-self._rate * self._step)))
         return min(self._final_v, self._init_v + (1 - np.exp(-self._rate * step)))
+
+
+class ExponentialDecay(Scheduler):
+
+    def __init__(self, sched_time_span: int, final_val: float, decay_factor: float) -> None:
+        super(ExponentialDecay, self).__init__(sched_time_span, 0., final_val)
+        self._decay_factor = decay_factor
+
+    def __call__(self, step: int = None) -> float:
+        if not step:
+            retval = max(self._decay_factor**step, self._final_v)
+            self._step += 1
+            return retval
+        return max(self._decay_factor**step, self._final_v)
+
+    @property
+    def initial_sched_value(self) -> float:
+        ''' Thsi is the initial value the schedule will visit '''
+        raise NotImplementedError("Property not implemented for class ExponentialDecay")

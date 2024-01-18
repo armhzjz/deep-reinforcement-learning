@@ -28,7 +28,7 @@ class Agent():
 class DoubleDQN_Agent():
     """Interacts with and learns from the environment."""
 
-    def __init__(self, state_size, action_size, seed, C=2):
+    def __init__(self, state_size, action_size, seed=None, C=2):
         """Initialize an Agent object.
 
         Params
@@ -51,7 +51,8 @@ class DoubleDQN_Agent():
     def _init(self, state_size: int, action_size: int or tuple, seed: float, C: int) -> None:
         self.state_size = state_size
         self.action_size = action_size
-        self.seed = random.seed(seed)
+        if seed:
+            self.seed = random.seed(seed)
 
         # Q-Network
         self._qnetwork = QNetwork(state_size, action_size, 'local', seed).to(device)
@@ -163,7 +164,7 @@ class AgentPrioritizedReplayBuf(DoubleDQN_Agent):
     def __init__(self,
                  state_size: int,
                  action_size: int or tuple,
-                 seed: float,
+                 seed: float = None,
                  C: int = 2,
                  alpha: float = 0.):
         self.memory = PrioritizedReplayBuffer(action_size=action_size,
@@ -175,8 +176,7 @@ class AgentPrioritizedReplayBuf(DoubleDQN_Agent):
              udp_alpha: float, is_beta: float) -> None:
         self.memory.alpha = udp_alpha
         if self._underline_step(state, action, reward, next_state, done, t_step):
-            *experiences, weights, indices = self.memory.sample(batch_size=BATCH_SIZE,
-                                                                beta=is_beta)
+            *experiences, weights, indices = self.memory.sample(batch_size=BATCH_SIZE, beta=is_beta)
             self.learn(experiences=experiences, gamma=GAMMA, weights=weights, indices=indices)
 
     def learn(self, experiences: any, gamma: float, weights: any, indices: any) -> None:
