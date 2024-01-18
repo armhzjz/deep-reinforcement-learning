@@ -75,4 +75,4 @@ class ExponentialAnnealingScheduler(Scheduler):
         if not step:
             self._step += 1
             return min(self._final_v, self._init_v + (1 - np.exp(-self._rate * self._step)))
-        return min(self._final_V, self._init_v + (1 - np.exp(-self._rate * step)))
+        return min(self._final_v, self._init_v + (1 - np.exp(-self._rate * step)))

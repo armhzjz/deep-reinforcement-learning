@@ -98,7 +98,7 @@ class PrioritizedReplayBuffer(ReplayBuffer):
             campared to ReplayBuffer.sample it also returns importance
             weights and indices of sampled experiences
         '''
-        if beta <= 0:
+        if beta < 0:
             raise Exception('beta must be bigger than zero.')
         idxs = self._sample_proportional(batch_size=batch_size)
         importance_sampling_weights = []
